@@ -1,0 +1,95 @@
+@page "/product"
+@rendermode InteractiveServer
+
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject ProductService ProductService
+
+@if (products == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <h1>Product List</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                @foreach (Header header in headers)
+                {
+                    <th>@header.Name</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Product product in products)
+            {
+                <tr @onclick="() => OnDetailClick(product)" style="cursor: pointer;">
+                    @foreach (Header header in headers)
+                    {
+                        <td class="align-middle">@product.GetType().GetProperty(header.Value).GetValue(product)</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+    <FluentGrid Spacing="@Spacing" OnBreakpointEnter="@OnBreakpointEnterHandler" AdaptiveRendering="true"
+        Justify="@Justification" Style="background-color: var(--neutral-layer-3); padding: 4px; ">
+
+        @foreach (Product product in products)
+        {
+            <FluentGridItem xs="6" sm="3">
+                <div class="card">
+                    @foreach (Header header in headers)
+                    {
+                        <p class="align-middle">@product.GetType().GetProperty(header.Value).GetValue(product)</p>
+                    }
+                </div>
+            </FluentGridItem>
+        }
+
+    </FluentGrid>
+
+    <script>
+        function getSelectedText() {
+            if (window.getSelection) {
+                return window.getSelection().toString();
+            } else if (document.selection && document.selection.type != "Control") {
+                return document.selection.createRange().text;
+            }
+            return '';
+        }
+    </script>
+}
+@code {
+    Header[] headers = new Header[]
+    {
+new Header("Name", "Name"),
+new Header("Price", "Price"),
+new Header("Description", "Description"),
+new Header("Stock", "Stock"),
+    };
+
+    List<Product> products;
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await ProductService.GetAllProduct();
+    }
+
+    protected async void OnDetailClick(Product product)
+    {
+        string selectedText = await JSRuntime.InvokeAsync<string>("getSelectedText");
+        if (selectedText.Length > 0)
+        {
+            return;
+        }
+        NavigationManager.NavigateTo("/product/" + product.Id);
+    }
+    JustifyContent Justification = JustifyContent.FlexStart;
+    int Spacing = 3;
+
+    void OnBreakpointEnterHandler(GridItemSize size)
+    {
+    }
+}

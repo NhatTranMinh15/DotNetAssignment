@@ -1,0 +1,29 @@
+@page "/product/{id}"
+@attribute [StreamRendering]
+@inject ProductService ProductService
+
+<PageTitle> Product Detail </PageTitle>
+<h1>Product Detail</h1>
+@if (product == null)
+{
+    <h2>Loading ...</h2>
+}
+else
+{
+    <p>@product.Id</p>
+    <p>@product.Name</p>
+    <p>@product.Description</p>
+    <p>@product.Price</p>
+    <p>@product.Stock</p>
+}
+@code {
+    Product product;
+    [Parameter]
+    public string Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(2000);
+        product = await ProductService.GetProductByIdAsync(Id);
+    }
+}
